@@ -24,7 +24,17 @@ def criar_bug(
     descricao: str = "",
     responsavel_id: int | None = None,
 ) -> Bug:
+
+    titulo = titulo.strip()
+    modulo = modulo.strip()
+
+    if not titulo:
+        raise ValueError("O título é obrigatório")
+    if not modulo:
+        raise ValueError("O módulo é obrigatório")
+
     _validar_responsavel(sessao, responsavel_id)
+
     bug = Bug(
         titulo=titulo,
         severidade=severidade,

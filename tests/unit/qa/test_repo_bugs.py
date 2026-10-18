@@ -6,6 +6,18 @@ from core.qa.enums import Severidade, Status
 from core.qa.repositories import bugs, membros
 
 
+def test_criar_bug_sem_titulo_levanta_erro(sessao, novo_bug):
+    with pytest.raises(ValueError, match="título"):
+        novo_bug(titulo="   ")
+    assert bugs.listar_bugs(sessao) == []
+
+
+def test_criar_bug_sem_modulo_levanta_erro(sessao, novo_bug):
+    with pytest.raises(ValueError, match="módulo"):
+        novo_bug(modulo="")
+    assert bugs.listar_bugs(sessao) == []
+
+
 def test_criar_e_obter_bug(sessao, novo_bug):
     bug = novo_bug()
 
@@ -60,6 +72,16 @@ def test_listar_filtra_por_status_modulo_e_responsavel(sessao, novo_membro, novo
     assert bugs.listar_bugs(sessao, modulo="Checkout")[0].id == corrigido.id
     assert bugs.listar_bugs(sessao, responsavel_id=ana.id)[0].id == corrigido.id
     assert bugs.listar_bugs(sessao, severidade=Severidade.BAIXA) == []
+
+
+def test_listar_combina_filtros_com_and(sessao, novo_bug):
+    novo_bug(modulo="Login", severidade=Severidade.ALTA)
+    alvo = novo_bug(modulo="Login", severidade=Severidade.BAIXA)
+    novo_bug(modulo="Checkout", severidade=Severidade.BAIXA)
+
+    resultado = bugs.listar_bugs(sessao, modulo="Login", severidade=Severidade.BAIXA)
+
+    assert [b.id for b in resultado] == [alvo.id]
 
 
 def test_corrigir_bug_preenche_data_de_resolucao(sessao, novo_bug):
