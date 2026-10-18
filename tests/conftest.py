@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+import streamlit as st
 from sqlalchemy.orm import Session
 
 import core.qa.models  # noqa: F401  (registra as tabelas em Base.metadata)
@@ -40,3 +41,16 @@ def novo_bug(sessao):
         return bugs.criar_bug(sessao, **dados)
 
     return _criar
+
+
+@pytest.fixture
+def banco_temporario(tmp_path, monkeypatch):
+    monkeypatch.setenv("PORTFOLIO_DB_URL", f"sqlite:///{(tmp_path / 'teste.db').as_posix()}")
+    st.cache_resource.clear()
+    yield
+    st.cache_resource.clear()
+
+
+@pytest.fixture
+def pagina_membros() -> str:
+    return str(RAIZ / "app" / "pages" / "1_Membros.py")
