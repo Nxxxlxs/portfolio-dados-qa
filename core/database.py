@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from sqlalchemy import Engine, create_engine, event
@@ -17,7 +18,8 @@ def _ativar_chaves_estrangeiras(conexao, _registro) -> None:
     cursor.close()
 
 
-def get_engine(url: str = DB_URL) -> Engine:
+def get_engine(url: str | None = None) -> Engine:
+    url = url or os.getenv("PORTFOLIO_DB_URL", DB_URL)
     if ":memory:" not in url:
         DATA_DIR.mkdir(exist_ok=True)
     engine = create_engine(url)

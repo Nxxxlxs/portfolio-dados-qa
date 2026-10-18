@@ -8,6 +8,7 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
+    PYTHONPATH=/app \
     PATH="/app/.venv/bin:$PATH"
 
 # 1) Só as dependências primeiro (aproveita o cache do Docker)
