@@ -1,7 +1,8 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from core.models import Bug, Membro, Papel, Severidade, Status
+from core.qa.enums import Papel, Severidade, Status
+from core.qa.models import Bug, Membro
 
 
 def test_bug_novo_recebe_valores_padrao(sessao):

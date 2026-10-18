@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 
 from core import repository as repo
-from core.models import Papel, Severidade, Status
+from core.qa.enums import Papel, Severidade, Status
 
 
 def _novo_membro(sessao, nome="Ana", papel=Papel.DEV):
@@ -95,6 +95,7 @@ def test_desativar_membro_mantem_o_historico_dos_bugs(sessao):
     salvo = repo.obter_bug(sessao, bug.id)
     assert salvo is not None
     assert salvo.responsavel_id == membro.id
+    assert salvo.responsavel is not None
     assert salvo.responsavel.nome == "Ana"
 
 

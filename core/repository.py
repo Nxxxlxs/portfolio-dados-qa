@@ -3,7 +3,8 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from core.models import Bug, Membro, Papel, Severidade, Status
+from core.qa.enums import Papel, Severidade, Status
+from core.qa.models import Bug, Membro
 
 CAMPOS_EDITAVEIS = {
     "titulo",

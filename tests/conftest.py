@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy.orm import Session
 
-import core.models  # noqa: F401  (registra as tabelas em Base.metadata)
+import core.qa.models  # noqa: F401  (registra as tabelas em Base.metadata)
 from core.database import Base, get_engine
 
 RAIZ = Path(__file__).resolve().parents[1]
