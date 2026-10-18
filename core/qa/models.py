@@ -1,30 +1,10 @@
-import enum
 from datetime import date
 
 from sqlalchemy import Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import Base
-
-
-class Severidade(enum.Enum):
-    BAIXA = "baixa"
-    MEDIA = "média"
-    ALTA = "alta"
-    CRITICA = "crítica"
-
-
-class Status(enum.Enum):
-    ABERTO = "aberto"
-    EM_ANALISE = "em análise"
-    CORRIGIDO = "corrigido"
-    FECHADO = "fechado"
-    REABERTO = "reaberto"
-
-
-class Papel(enum.Enum):
-    QA = "QA"
-    DEV = "DEV"
+from core.qa.enums import Papel, Severidade, Status
 
 
 class Membro(Base):
