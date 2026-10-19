@@ -54,3 +54,8 @@ def banco_temporario(tmp_path, monkeypatch):
 @pytest.fixture
 def pagina_membros() -> str:
     return str(RAIZ / "app" / "pages" / "1_Membros.py")
+
+
+@pytest.fixture
+def pagina_bugs() -> str:
+    return str(RAIZ / "app" / "pages" / "2_Bugs.py")
