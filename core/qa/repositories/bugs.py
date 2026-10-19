@@ -25,13 +25,8 @@ def criar_bug(
     responsavel_id: int | None = None,
 ) -> Bug:
 
-    titulo = titulo.strip()
-    modulo = modulo.strip()
-
-    if not titulo:
-        raise ValueError("O título é obrigatório")
-    if not modulo:
-        raise ValueError("O módulo é obrigatório")
+    titulo = _texto_obrigatorio(titulo, "título")
+    modulo = _texto_obrigatorio(modulo, "módulo")
 
     _validar_responsavel(sessao, responsavel_id)
 
@@ -79,7 +74,11 @@ def atualizar_bug(sessao: Session, bug_id: int, **campos) -> Bug | None:
     if invalidos:
         raise ValueError(f"Campos não editáveis: {sorted(invalidos)}")
 
-    if "responsavel_id" in campos:
+    if "titulo" in campos:
+        campos["titulo"] = _texto_obrigatorio(campos["titulo"], "título")
+    if "modulo" in campos:
+        campos["modulo"] = _texto_obrigatorio(campos["modulo"], "módulo")
+    if "responsavel_id" in campos and campos["responsavel_id"] != bug.responsavel_id:
         _validar_responsavel(sessao, campos["responsavel_id"])
 
     for nome, valor in campos.items():
@@ -108,6 +107,13 @@ def _validar_responsavel(sessao: Session, responsavel_id: int | None) -> None:
         raise ValueError("Responsável não encontrado")
     if not membro.ativo:
         raise ValueError("Responsável inativo")
+
+
+def _texto_obrigatorio(valor: str, rotulo: str) -> str:
+    valor = valor.strip()
+    if not valor:
+        raise ValueError(f"O {rotulo} é obrigatório")
+    return valor
 
 
 def _ajustar_resolucao(bug: Bug) -> None:

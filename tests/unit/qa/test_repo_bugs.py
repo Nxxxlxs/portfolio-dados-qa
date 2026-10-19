@@ -3,6 +3,7 @@ from datetime import date
 import pytest
 
 from core.qa.enums import Severidade, Status
+from core.qa.models import Bug
 from core.qa.repositories import bugs, membros
 
 
@@ -139,3 +140,61 @@ def test_excluir_bug(sessao, novo_bug):
     assert bugs.excluir_bug(sessao, bug.id) is True
     assert bugs.obter_bug(sessao, bug.id) is None
     assert bugs.excluir_bug(sessao, bug.id) is False
+
+
+@pytest.mark.parametrize(
+    ("campo", "trecho"),
+    [("titulo", "título"), ("modulo", "módulo")],
+)
+def test_atualizar_texto_obrigatorio_vazio_levanta_erro_e_nao_altera(
+    sessao, novo_bug, campo, trecho
+):
+    bug = novo_bug()
+    original = getattr(bug, campo)
+
+    with pytest.raises(ValueError, match=trecho):
+        bugs.atualizar_bug(sessao, bug.id, **{campo: "   "})
+
+    assert getattr(bugs.obter_bug(sessao, bug.id), campo) == original
+
+
+def test_atualizar_remove_espacos_do_titulo(sessao, novo_bug):
+    bug = novo_bug()
+
+    atualizado = bugs.atualizar_bug(sessao, bug.id, titulo="  Novo título  ")
+
+    assert atualizado is not None
+    assert atualizado.titulo == "Novo título"
+
+
+def test_manter_responsavel_inativo_ao_editar_outros_campos(sessao, novo_membro, novo_bug):
+    ana = novo_membro("Ana")
+    bug = novo_bug(responsavel_id=ana.id)
+    membros.definir_ativo(sessao, ana.id, False)
+
+    atualizado = bugs.atualizar_bug(sessao, bug.id, titulo="Novo título", responsavel_id=ana.id)
+
+    assert atualizado is not None
+    assert atualizado.titulo == "Novo título"
+    assert atualizado.responsavel_id == ana.id
+
+
+def test_reatribuir_para_responsavel_inativo_levanta_erro(sessao, novo_membro, novo_bug):
+    bruno = novo_membro("Bruno")
+    membros.definir_ativo(sessao, bruno.id, False)
+    bug: Bug = novo_bug()
+
+    with pytest.raises(ValueError, match="inativo"):
+        bugs.atualizar_bug(sessao, bug.id, responsavel_id=bruno.id)
+
+    assert bug.responsavel_id is None
+
+
+def test_remover_responsavel(sessao, novo_membro, novo_bug):
+    ana = novo_membro("Ana")
+    bug = novo_bug(responsavel_id=ana.id)
+
+    atualizado = bugs.atualizar_bug(sessao, bug.id, responsavel_id=None)
+
+    assert atualizado is not None
+    assert atualizado.responsavel_id is None
