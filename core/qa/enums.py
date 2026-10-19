@@ -2,18 +2,18 @@ import enum
 
 
 class Severidade(enum.Enum):
-    BAIXA = "baixa"
-    MEDIA = "média"
-    ALTA = "alta"
-    CRITICA = "crítica"
+    BAIXA = "Baixa"
+    MEDIA = "Média"
+    ALTA = "Alta"
+    CRITICA = "Crítica"
 
 
 class Status(enum.Enum):
-    ABERTO = "aberto"
-    EM_ANALISE = "em análise"
-    CORRIGIDO = "corrigido"
-    FECHADO = "fechado"
-    REABERTO = "reaberto"
+    ABERTO = "Aberto"
+    EM_ANALISE = "Em análise"
+    CORRIGIDO = "Corrigido"
+    FECHADO = "Fechado"
+    REABERTO = "Reaberto"
 
 
 class Papel(enum.Enum):
