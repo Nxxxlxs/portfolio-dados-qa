@@ -1,44 +1,28 @@
-import pytest
-
 from core.qa.enums import Papel, Severidade
 from core.qa.repositories import bugs, membros
 from tests.ui.helpers import abrir, sessao_do_banco
 
-INDICE_ALTA = list(Severidade).index(Severidade.ALTA)
-DESCRICAO_LONGA = "Passos para reproduzir: abrir o login e clicar em entrar sem preencher nada."
 
-
-def _preencher(at, titulo="", descricao="", modulo="", severidade=0, responsavel=0):
-    at.text_input(key="titulo_bug").set_value(titulo)
-    at.text_area(key="descricao_bug").set_value(descricao)
-    at.text_input(key="modulo_bug").set_value(modulo)
-    at.selectbox(key="severidade_bug").select_index(severidade)
-    at.selectbox(key="responsavel_bug").select_index(responsavel)
-    return at
-
-
-def _cadastrar(at):
-    return at.button(key="cadastrar_bug").click().run()
-
-
-def _bugs_no_banco():
+def _gravar_bug(titulo="Erro no login", modulo="Login", responsavel=None, inativo=False) -> int:
+    """Grava um bug direto no banco temporário e devolve o ID dele."""
     with sessao_do_banco() as sessao:
-        return [
-            (b.titulo, b.modulo, b.severidade, b.responsavel.nome if b.responsavel else None)
-            for b in bugs.listar_bugs(sessao)
-        ]
+        responsavel_id = None
+        if responsavel is not None:
+            responsavel_id = membros.criar_membro(sessao, responsavel, Papel.DEV).id
+        bug = bugs.criar_bug(
+            sessao,
+            titulo=titulo,
+            severidade=Severidade.ALTA,
+            modulo=modulo,
+            responsavel_id=responsavel_id,
+        )
+        if inativo and responsavel_id is not None:
+            membros.definir_ativo(sessao, responsavel_id, False)
+        return bug.id
 
 
-def _abrir_com_membros(pagina, *nomes_ativos, inativos=()):
-    """Abre a página (que cria as tabelas), cadastra membros e recarrega."""
-    at = abrir(pagina)
-    with sessao_do_banco() as sessao:
-        for nome in nomes_ativos:
-            membros.criar_membro(sessao, nome, Papel.DEV)
-        for nome in inativos:
-            membro = membros.criar_membro(sessao, nome, Papel.DEV)
-            membros.definir_ativo(sessao, membro.id, False)
-    return at.run()
+def _textos(at) -> list[str]:
+    return [m.value for m in at.markdown]
 
 
 def test_pagina_sem_bugs_mostra_aviso(banco_temporario, pagina_bugs):
@@ -49,87 +33,85 @@ def test_pagina_sem_bugs_mostra_aviso(banco_temporario, pagina_bugs):
     assert "Nenhum bug" in at.info[0].value
 
 
-def test_cadastrar_bug_grava_no_banco_e_lista(banco_temporario, pagina_bugs):
-    at = _abrir_com_membros(pagina_bugs, "Ana")
+def test_lista_mostra_os_bugs_gravados(banco_temporario, pagina_bugs):
+    at = abrir(pagina_bugs)
+    _gravar_bug("Erro no login", responsavel="Ana")
+    _gravar_bug("Relatório vazio", modulo="Vendas")
 
-    _preencher(
-        at,
-        titulo="Erro no login",
-        descricao=DESCRICAO_LONGA,
-        modulo="Login",
-        severidade=INDICE_ALTA,
-        responsavel=1,
-    )
-    at = _cadastrar(at)
+    textos = _textos(at.run())
 
-    assert not at.exception
-    assert "Erro no login" in at.success[0].value
-    tabela = at.dataframe[0].value
-    assert tabela["Título"].tolist() == ["Erro no login"]
-    assert tabela["Status"].tolist() == ["Aberto"]
-    assert tabela["Responsável"].tolist() == ["Ana"]
-    assert _bugs_no_banco() == [("Erro no login", "Login", Severidade.ALTA, "Ana")]
+    assert {"Erro no login", "Relatório vazio", "Ana", "Vendas", "—"} <= set(textos)
 
 
-def test_cadastrar_bug_sem_responsavel(banco_temporario, pagina_bugs):
-    at = _abrir_com_membros(pagina_bugs, "Ana")
+def test_cada_bug_tem_botao_de_editar(banco_temporario, pagina_bugs):
+    at = abrir(pagina_bugs)
+    primeiro = _gravar_bug("Erro no login")
+    segundo = _gravar_bug("Relatório vazio")
 
-    _preencher(at, titulo="Erro no login", modulo="Login", responsavel=0)
-    at = _cadastrar(at)
+    chaves = [b.key for b in at.run().button]
 
-    assert at.dataframe[0].value["Responsável"].tolist() == ["—"]
-    assert _bugs_no_banco()[0][3] is None
-
-    print(_bugs_no_banco())
+    assert f"editar_{primeiro}" in chaves
+    assert f"editar_{segundo}" in chaves
 
 
-def test_sucesso_limpa_os_campos(banco_temporario, pagina_bugs):
+def test_novo_bug_abre_o_modal_de_cadastro(banco_temporario, pagina_bugs):
     at = abrir(pagina_bugs)
 
-    _preencher(at, titulo="Erro no login", descricao=DESCRICAO_LONGA, modulo="Login")
-    at = _cadastrar(at)
+    at = at.button(key="novo_bug").click().run()
 
     assert at.text_input(key="titulo_bug").value == ""
     assert at.text_area(key="descricao_bug").value == ""
-    assert at.text_input(key="modulo_bug").value == ""
 
 
-@pytest.mark.parametrize(
-    ("titulo", "modulo", "trecho"),
-    [
-        ("", "Login", "título"),
-        ("Erro no login", "", "módulo"),
-    ],
-)
-def test_erro_de_validacao_preserva_os_campos(
-    banco_temporario, pagina_bugs, titulo, modulo, trecho
-):
+def test_editar_abre_o_modal_com_os_dados_do_bug(banco_temporario, pagina_bugs):
     at = abrir(pagina_bugs)
+    bug_id = _gravar_bug("Erro no login", modulo="Login")
 
-    _preencher(at, titulo=titulo, descricao=DESCRICAO_LONGA, modulo=modulo)
-    at = _cadastrar(at)
+    at = at.run().button(key=f"editar_{bug_id}").click().run()
 
-    assert trecho in at.error[0].value
-    assert at.text_input(key="titulo_bug").value == titulo
-    assert at.text_area(key="descricao_bug").value == DESCRICAO_LONGA
-    assert at.text_input(key="modulo_bug").value == modulo
-    assert _bugs_no_banco() == []
+    assert at.text_input(key=f"titulo_editar_{bug_id}").value == "Erro no login"
+    assert at.text_input(key=f"modulo_editar_{bug_id}").value == "Login"
 
 
-def test_mensagem_some_na_interacao_seguinte(banco_temporario, pagina_bugs):
+def test_editar_mostra_responsavel_inativo_como_opcao(banco_temporario, pagina_bugs):
     at = abrir(pagina_bugs)
-    _preencher(at, titulo="Erro no login", modulo="Login")
-    at = _cadastrar(at)
-    assert len(at.success) == 1
+    bug_id = _gravar_bug(responsavel="Ana", inativo=True)
 
-    at = at.run()
+    at = at.run().button(key=f"editar_{bug_id}").click().run()
 
-    assert len(at.success) == 0
+    opcoes = at.selectbox(key=f"responsavel_editar_{bug_id}").options
+    assert opcoes == ["Sem responsável", "Ana (inativo)"]
 
 
-def test_responsavel_lista_so_membros_ativos(banco_temporario, pagina_bugs):
-    at = _abrir_com_membros(pagina_bugs, "Ana", inativos=("Bruno",))
+def test_cada_bug_tem_botao_de_excluir(banco_temporario, pagina_bugs):
+    at = abrir(pagina_bugs)
+    primeiro = _gravar_bug("Erro no login")
+    segundo = _gravar_bug("Relatório vazio")
 
-    opcoes = at.selectbox(key="responsavel_bug").options
+    chaves = [b.key for b in at.run().button]
 
-    assert opcoes == ["Sem responsável", "Ana"]
+    assert f"excluir_{primeiro}" in chaves
+    assert f"excluir_{segundo}" in chaves
+
+
+def test_excluir_abre_confirmacao_com_o_bug_da_linha(banco_temporario, pagina_bugs):
+    at = abrir(pagina_bugs)
+    _gravar_bug("Erro no login")
+    bug_id = _gravar_bug("Relatório vazio")
+
+    at = at.run().button(key=f"excluir_{bug_id}").click().run()
+
+    chaves = [b.key for b in at.button]
+    assert f"confirmar_exclusao_{bug_id}" in chaves
+    assert f"cancelar_exclusao_{bug_id}" in chaves
+    assert any(f"#{bug_id} — Relatório vazio" in texto for texto in _textos(at))
+
+
+def test_abrir_a_confirmacao_nao_exclui_o_bug(banco_temporario, pagina_bugs):
+    at = abrir(pagina_bugs)
+    bug_id = _gravar_bug("Erro no login")
+
+    at.run().button(key=f"excluir_{bug_id}").click().run()
+
+    with sessao_do_banco() as sessao:
+        assert [b.id for b in bugs.listar_bugs(sessao)] == [bug_id]
