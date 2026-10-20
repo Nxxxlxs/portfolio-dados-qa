@@ -81,3 +81,37 @@ def test_editar_mostra_responsavel_inativo_como_opcao(banco_temporario, pagina_b
 
     opcoes = at.selectbox(key=f"responsavel_editar_{bug_id}").options
     assert opcoes == ["Sem responsável", "Ana (inativo)"]
+
+
+def test_cada_bug_tem_botao_de_excluir(banco_temporario, pagina_bugs):
+    at = abrir(pagina_bugs)
+    primeiro = _gravar_bug("Erro no login")
+    segundo = _gravar_bug("Relatório vazio")
+
+    chaves = [b.key for b in at.run().button]
+
+    assert f"excluir_{primeiro}" in chaves
+    assert f"excluir_{segundo}" in chaves
+
+
+def test_excluir_abre_confirmacao_com_o_bug_da_linha(banco_temporario, pagina_bugs):
+    at = abrir(pagina_bugs)
+    _gravar_bug("Erro no login")
+    bug_id = _gravar_bug("Relatório vazio")
+
+    at = at.run().button(key=f"excluir_{bug_id}").click().run()
+
+    chaves = [b.key for b in at.button]
+    assert f"confirmar_exclusao_{bug_id}" in chaves
+    assert f"cancelar_exclusao_{bug_id}" in chaves
+    assert any(f"#{bug_id} — Relatório vazio" in texto for texto in _textos(at))
+
+
+def test_abrir_a_confirmacao_nao_exclui_o_bug(banco_temporario, pagina_bugs):
+    at = abrir(pagina_bugs)
+    bug_id = _gravar_bug("Erro no login")
+
+    at.run().button(key=f"excluir_{bug_id}").click().run()
+
+    with sessao_do_banco() as sessao:
+        assert [b.id for b in bugs.listar_bugs(sessao)] == [bug_id]

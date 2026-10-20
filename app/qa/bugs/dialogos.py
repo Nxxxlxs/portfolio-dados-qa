@@ -113,3 +113,26 @@ def dialogo_edicao(bug_id: int) -> None:
         else:
             st.toast(f"Bug #{bug_id} atualizado.")
             st.rerun()
+
+
+@st.dialog("Excluir bug")
+def dialogo_exclusao(bug_id: int) -> None:
+    with nova_sessao() as sessao:
+        bug = bugs.obter_bug(sessao, bug_id)
+        titulo = bug.titulo if bug is not None else None
+
+    if titulo is None:
+        st.error("Este bug não existe mais.")
+        return
+
+    st.write(f"Excluir o bug **#{bug_id} — {titulo}**? Esta ação não pode ser desfeita.")
+    confirmar, cancelar = st.columns(2)
+
+    if confirmar.button("Excluir", type="primary", key=f"confirmar_exclusao_{bug_id}"):
+        with nova_sessao() as sessao:
+            bugs.excluir_bug(sessao, bug_id)
+        st.toast(f"Bug #{bug_id} excluído.")
+        st.rerun()
+
+    if cancelar.button("Cancelar", key=f"cancelar_exclusao_{bug_id}"):
+        st.rerun()

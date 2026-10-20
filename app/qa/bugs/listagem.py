@@ -1,11 +1,11 @@
 import streamlit as st
 
 from app.db import nova_sessao
-from app.qa.bugs.dialogos import dialogo_edicao
+from app.qa.bugs.dialogos import dialogo_edicao, dialogo_exclusao
 from core.qa.repositories import bugs
 
-CABECALHO = ["ID", "Título", "Severidade", "Status", "Módulo", "Responsável", "Aberto em", ""]
-LARGURAS = [1, 4, 2, 2, 2, 2, 2, 1]
+CABECALHO = ["ID", "Título", "Severidade", "Status", "Módulo", "Responsável", "Aberto em", "", ""]
+LARGURAS = [1, 4, 2, 2, 2, 2, 2, 1, 1]
 
 
 def exibir_lista() -> None:
@@ -35,5 +35,7 @@ def exibir_lista() -> None:
         colunas = st.columns(LARGURAS)
         for coluna, valor in zip(colunas, linha, strict=False):
             coluna.write(str(valor))
-        if colunas[-1].button("Editar", key=f"editar_{bug_id}"):
+        if colunas[-2].button("Editar", key=f"editar_{bug_id}"):
             dialogo_edicao(bug_id)
+        if colunas[-1].button("Excluir", key=f"excluir_{bug_id}"):
+            dialogo_exclusao(bug_id)
