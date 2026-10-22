@@ -1,0 +1,43 @@
+# Decisões do projeto
+
+Registro das escolhas feitas ao longo do desenvolvimento, com o motivo de cada uma.
+
+## Base de dados: Eclipse and Mozilla Defect Tracking Dataset (JDT)
+
+- **Decisão:** usar os bugs do JDT, uma base real com histórico de mudanças de status.
+- **Motivo:** o histórico permite derivar tempo de resolução e reabertura. Outras bases avaliadas foram descartadas: uma tinha todas as tarefas "Done", fechamentos em lote e sem histórico de status; outra era sintética, com 100 linhas.
+
+## Dados fora do repositório
+
+- **Decisão:** os dados não são versionados. Um script baixa o pacote original e extrai só o JDT em `data/raw/jdt/`.
+- **Motivo:** a base não informa licença de uso, então não é seguro redistribuí-la. O repositório traz o script e a citação da base.
+
+## Primeira resolução
+
+- **Decisão:** a primeira resolução de um bug é a primeira ocorrência de `RESOLVED`, `VERIFIED` ou `CLOSED`.
+- **Motivo:** 351 dos 10.814 bugs vão direto de `NEW` ou `ASSIGNED` para `CLOSED`. Contar só `RESOLVED` deixaria esses bugs sem tempo de resolução e distorceria as médias sem aviso.
+
+## Prioridade fora da tabela
+
+- **Decisão:** a coluna de prioridade não entra na tabela.
+- **Motivo:** cerca de 96% dos bugs não têm prioridade preenchida.
+
+## Duas colunas de severidade
+
+- **Decisão:** a tabela tem `severidade` (valor final, usada no dashboard) e `severidade_na_resolucao` (valor no instante da primeira resolução, destinada ao modelo de reabertura).
+- **Motivo:** evitar vazamento de dados no modelo. Em 53 bugs (cerca de 0,5%) a severidade mudou depois da primeira resolução.
+
+## Limitação conhecida: todos os bugs terminam resolvidos
+
+- **Situação:** na base, nenhum bug termina aberto. Por isso o backlog reconstruído a partir do histórico tende a parecer baixo nos meses mais recentes.
+- **Tratamento:** avisar isso no dashboard. A causa exata (filtro da base ou recorte) ainda não foi verificada.
+
+## Validação da tabela com pandera
+
+- **Decisão:** a tabela de bugs é validada por um esquema (`core/qa/esquema.py`) com tipos, `id` único, valores não negativos e regras entre colunas: a primeira resolução não pode ser anterior à criação, e `reaberto` deve ser coerente com `n_reaberturas`.
+- **Motivo:** os testes unitários conferem o código com dados inventados, e o esquema confere os dados reais toda vez que a tabela é montada.
+
+## Valores de severidade
+
+- **Decisão:** `severidade` e `severidade_na_resolucao` têm listas de valores permitidos diferentes. O valor `enhancement` só é aceito na segunda.
+- **Motivo:** 4 bugs eram `enhancement` no momento da primeira resolução e foram reclassificados depois, então esse valor não existe na severidade final. A lista foi definida olhando os valores reais da base.
