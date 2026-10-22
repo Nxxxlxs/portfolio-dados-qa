@@ -41,3 +41,9 @@ Registro das escolhas feitas ao longo do desenvolvimento, com o motivo de cada u
 
 - **Decisão:** `severidade` e `severidade_na_resolucao` têm listas de valores permitidos diferentes. O valor `enhancement` só é aceito na segunda.
 - **Motivo:** 4 bugs eram `enhancement` no momento da primeira resolução e foram reclassificados depois, então esse valor não existe na severidade final. A lista foi definida olhando os valores reais da base.
+
+## KPIs: média e mediana, e divisor da taxa de reabertura
+
+- **Decisão:** o tempo de resolução é mostrado com **média e mediana**, e a taxa de reabertura é calculada só sobre bugs que já tiveram primeira resolução.
+- **Motivo:** poucos bugs com resolução muito longa puxam a média (59 dias contra mediana de 2,8). Só quem foi resolvido pode ser reaberto, então bugs sem resolução não entram no divisor.
+- **Observação:** a taxa conta bugs reabertos pelo menos uma vez (não eventos), e as funções de KPI recebem a tabela já validada.
