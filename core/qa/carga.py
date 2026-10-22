@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from core.qa.download import PASTA_JDT
+from core.qa.download import PASTA_JDT, baixar_pacote, extrair_jdt
+from core.qa.esquema import validar_tabela
 
 STATUS_RESOLVIDO = {"RESOLVED", "VERIFIED", "CLOSED"}
 
@@ -96,3 +97,9 @@ def montar_tabela(pasta: Path = PASTA_JDT) -> pd.DataFrame:
     tabela["dias_ate_resolucao"] = diferenca.dt.total_seconds() / 86400
 
     return tabela
+
+
+def carregar_tabela() -> pd.DataFrame:
+    baixar_pacote()
+    pasta = extrair_jdt()
+    return validar_tabela(montar_tabela(pasta))

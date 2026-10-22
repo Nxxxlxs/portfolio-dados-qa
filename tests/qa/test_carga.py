@@ -1,6 +1,7 @@
 import pandas as pd
 
 from core.qa.carga import (
+    carregar_tabela,
     contar_reaberturas,
     ler_criacao,
     ler_primeira_resolucao,
@@ -159,3 +160,33 @@ def test_contar_reaberturas_conta_so_as_que_vem_depois_da_primeira_resolucao(tmp
 
     assert tabela["id"].tolist() == [1]
     assert tabela["n_reaberturas"].tolist() == [2]
+
+
+def test_carregar_tabela_baixa_extrai_monta_e_valida_nessa_ordem(monkeypatch):
+    chamadas = []
+    tabela_falsa = pd.DataFrame({"id": [1]})
+
+    def baixar_falso():
+        chamadas.append("baixar")
+
+    def extrair_falso():
+        chamadas.append("extrair")
+        return "pasta-falsa"
+
+    def montar_falso(pasta):
+        chamadas.append(f"montar:{pasta}")
+        return tabela_falsa
+
+    def validar_falso(tabela):
+        chamadas.append("validar")
+        return tabela
+
+    monkeypatch.setattr("core.qa.carga.baixar_pacote", baixar_falso)
+    monkeypatch.setattr("core.qa.carga.extrair_jdt", extrair_falso)
+    monkeypatch.setattr("core.qa.carga.montar_tabela", montar_falso)
+    monkeypatch.setattr("core.qa.carga.validar_tabela", validar_falso)
+
+    resultado = carregar_tabela()
+
+    assert chamadas == ["baixar", "extrair", "montar:pasta-falsa", "validar"]
+    assert resultado is tabela_falsa
