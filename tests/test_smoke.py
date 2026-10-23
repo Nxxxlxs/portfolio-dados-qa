@@ -57,3 +57,13 @@ def test_dashboard_mostra_o_grafico_de_criados_e_resolvidos(app_main):
 
     assert not at.exception
     assert at.subheader[0].value == "Bugs criados e resolvidos por mês"
+
+
+def test_dashboard_mostra_o_grafico_de_severidade(app_main):
+    at = AppTest.from_file(app_main).run()
+
+    assert not at.exception
+    assert [s.value for s in at.subheader] == [
+        "Bugs criados e resolvidos por mês",
+        "Bugs por severidade",
+    ]
