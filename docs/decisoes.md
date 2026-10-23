@@ -47,3 +47,11 @@ Registro das escolhas feitas ao longo do desenvolvimento, com o motivo de cada u
 - **Decisão:** o tempo de resolução é mostrado com **média e mediana**, e a taxa de reabertura é calculada só sobre bugs que já tiveram primeira resolução.
 - **Motivo:** poucos bugs com resolução muito longa puxam a média (59 dias contra mediana de 2,8). Só quem foi resolvido pode ser reaberto, então bugs sem resolução não entram no divisor.
 - **Observação:** a taxa conta bugs reabertos pelo menos uma vez (não eventos), e as funções de KPI recebem a tabela já validada.
+
+## Filtros e gráfico do dashboard
+
+- **Decisão:** os cartões do topo consideram os bugs **criados** no período escolhido. No gráfico, criados e resolvidos são contados cada um pela **própria data**, só dentro do período, e o eixo mostra apenas os meses do período.
+- **Motivo:** contar as resoluções dos bugs criados no período arrastava a linha de resolvidos até 2011 mesmo com um período curto, o que confundia a leitura. A contagem de cada linha pela sua data responde "quantos bugs entraram e quantos saíram em cada mês?".
+- **Consequência:** a soma de resolvidos no gráfico pode diferir da soma dos cartões, porque inclui resoluções de bugs criados antes do período.
+- **Limitação:** a base termina em 05/05/2011, então o último mês é incompleto. O dashboard avisa isso na legenda.
+- **Filtros de categoria:** severidade e componente usam caixas de seleção (uma por opção, em 2 linhas de 3) e não o seletor múltiplo padrão, por ficarem todas visíveis e por serem mais intuitivas para quem não é da área.

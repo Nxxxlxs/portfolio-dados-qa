@@ -1,3 +1,5 @@
+from datetime import date
+
 import pandas as pd
 from pytest import approx
 
@@ -77,3 +79,22 @@ def test_resumir_total_ignora_bug_sem_resolucao():
     assert resultado["media_dias"] == 5.5
     assert resultado["mediana_dias"] == 5.5
     assert resultado["taxa_reabertura"] == 0.5
+
+
+def test_criados_e_resolvidos_no_periodo_usa_so_os_meses_e_datas_do_periodo():
+    tabela = pd.DataFrame(
+        {
+            "criado_em": pd.to_datetime(["2006-01-05", "2006-01-20", "2006-03-10"]),
+            "primeira_resolucao_em": pd.to_datetime(["2006-02-10", "2006-03-01", "2006-06-15"]),
+        }
+    )
+
+    resultado = criados_e_resolvidos_por_mes(tabela, date(2006, 1, 1), date(2006, 3, 31))
+
+    assert resultado["mes"].tolist() == [
+        pd.Period("2006-01"),
+        pd.Period("2006-02"),
+        pd.Period("2006-03"),
+    ]
+    assert resultado["criados"].tolist() == [2, 0, 1]
+    assert resultado["resolvidos"].tolist() == [0, 1, 1]

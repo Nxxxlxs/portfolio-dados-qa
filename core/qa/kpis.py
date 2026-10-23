@@ -1,19 +1,37 @@
+from datetime import date
+
 import pandas as pd
 
+from core.qa.filtros import no_periodo
 
-def contar_por_mes(tabela: pd.DataFrame, coluna: str) -> pd.DataFrame:
+
+def contar_por_mes(
+    tabela: pd.DataFrame, coluna: str, meses: pd.PeriodIndex | None = None
+) -> pd.DataFrame:
     """Conta quantos bugs caem em cada mês da coluna de data pedida, sem pular meses."""
-    meses = tabela[coluna].dt.to_period("M")
-    contagem = meses.value_counts()
-    todos_os_meses = pd.period_range(contagem.index.min(), contagem.index.max(), freq="M")
-    contagem = contagem.reindex(todos_os_meses, fill_value=0).sort_index()
+    do_mes = tabela[coluna].dt.to_period("M")
+    contagem = do_mes.value_counts()
+    if meses is None:
+        meses = pd.period_range(contagem.index.min(), contagem.index.max(), freq="M")
+    contagem = contagem.reindex(meses, fill_value=0).sort_index()
     return contagem.rename_axis("mes").reset_index(name="bugs")
 
 
-def criados_e_resolvidos_por_mes(tabela: pd.DataFrame) -> pd.DataFrame:
-    """Devolve, por mês, quantos bugs foram criados e quantos tiveram a primeira resolução."""
-    criados = contar_por_mes(tabela, "criado_em").rename(columns={"bugs": "criados"})
-    resolvidos = contar_por_mes(tabela, "primeira_resolucao_em").rename(
+def criados_e_resolvidos_por_mes(
+    tabela: pd.DataFrame, inicio: date | None = None, fim: date | None = None
+) -> pd.DataFrame:
+    """Conta, por mês, os bugs criados e os resolvidos, cada um pela própria data.
+
+    Com início e fim, só entram os meses do período e as datas dentro dele.
+    """
+    meses = None
+    base_criados, base_resolvidos = tabela, tabela
+    if inicio is not None and fim is not None:
+        meses = pd.period_range(inicio, fim, freq="M")
+        base_criados = no_periodo(tabela, "criado_em", inicio, fim)
+        base_resolvidos = no_periodo(tabela, "primeira_resolucao_em", inicio, fim)
+    criados = contar_por_mes(base_criados, "criado_em", meses).rename(columns={"bugs": "criados"})
+    resolvidos = contar_por_mes(base_resolvidos, "primeira_resolucao_em", meses).rename(
         columns={"bugs": "resolvidos"}
     )
     juntos = criados.merge(resolvidos, on="mes", how="outer").sort_values("mes")
