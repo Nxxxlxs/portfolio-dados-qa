@@ -52,18 +52,13 @@ def test_sem_nenhum_bug_nos_filtros_mostra_aviso(app_main):
     assert at.warning[0].value == "Nenhum bug encontrado com esses filtros."
 
 
-def test_dashboard_mostra_o_grafico_de_criados_e_resolvidos(app_main):
-    at = AppTest.from_file(app_main).run()
-
-    assert not at.exception
-    assert at.subheader[0].value == "Bugs criados e resolvidos por mês"
-
-
-def test_dashboard_mostra_o_grafico_de_severidade(app_main):
+def test_dashboard_mostra_os_graficos(app_main):
     at = AppTest.from_file(app_main).run()
 
     assert not at.exception
     assert [s.value for s in at.subheader] == [
         "Bugs criados e resolvidos por mês",
+        "Tempo até a primeira resolução",
         "Bugs por severidade",
+        "Taxa de reabertura",
     ]

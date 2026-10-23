@@ -3,7 +3,9 @@ import pandas as pd
 from app.telas.qualidade.graficos import (
     COR_SEVERIDADE,
     grafico_criados_e_resolvidos,
+    grafico_reabertura,
     grafico_severidade,
+    grafico_tempo_resolucao,
 )
 
 
@@ -46,3 +48,39 @@ def test_grafico_severidade_ordena_da_mais_grave_e_escreve_numero_e_porcentagem(
     assert list(barras.text) == ["1 (25,0%)", "3 (75,0%)"]  # pyright: ignore[reportAttributeAccessIssue]
     assert list(barras.marker.color) == [COR_SEVERIDADE["critical"], COR_SEVERIDADE["normal"]]  # pyright: ignore[reportAttributeAccessIssue]
     assert figura.layout.xaxis.range[1] > 3  # pyright: ignore[reportAttributeAccessIssue]
+
+
+def test_grafico_tempo_resolucao_tem_mediana_em_barras_e_media_em_pontos():
+    resumo = pd.DataFrame(
+        {
+            "severidade": ["normal", "critical"],
+            "mediana_dias": [2.8, 1.4],
+            "media_dias": [60.2, 13.4],
+        }
+    )
+
+    figura = grafico_tempo_resolucao(resumo)
+
+    mediana, media = figura.data
+    assert [mediana.name, media.name] == ["Mediana", "Média"]  # pyright: ignore[reportAttributeAccessIssue]
+    assert list(mediana.x) == ["critical", "normal"]  # pyright: ignore[reportAttributeAccessIssue]
+    assert list(mediana.y) == [1.4, 2.8]  # pyright: ignore[reportAttributeAccessIssue]
+    assert list(media.y) == [13.4, 60.2]  # pyright: ignore[reportAttributeAccessIssue]
+    assert figura.layout.yaxis.title.text == "Dias"  # pyright: ignore[reportAttributeAccessIssue]
+
+
+def test_grafico_reabertura_ordena_e_mostra_taxa_com_tamanho_do_grupo():
+    resumo = pd.DataFrame(
+        {
+            "severidade": ["normal", "critical"],
+            "bugs": [1000, 8],
+            "taxa_reabertura": [0.09, 0.125],
+        }
+    )
+
+    figura = grafico_reabertura(resumo)
+
+    barras = figura.data[0]
+    assert list(barras.y) == ["critical", "normal"]  # pyright: ignore[reportAttributeAccessIssue]
+    assert list(barras.x) == [0.125, 0.09]  # pyright: ignore[reportAttributeAccessIssue]
+    assert list(barras.text) == ["12,5% (de 8)", "9,0% (de 1.000)"]  # pyright: ignore[reportAttributeAccessIssue]
