@@ -2,7 +2,7 @@ from datetime import date
 
 import pandas as pd
 
-from core.qa.filtros import filtrar
+from core.qa.filtros import filtrar, no_periodo
 
 
 def tabela_exemplo() -> pd.DataFrame:
@@ -36,3 +36,13 @@ def test_filtrar_por_periodo_inclui_o_ultimo_dia_inteiro():
     )
 
     assert resultado["id"].tolist() == [2]
+
+
+def test_no_periodo_usa_a_coluna_pedida_e_inclui_o_ultimo_dia():
+    tabela = tabela_exemplo().assign(
+        resolvido_em=pd.to_datetime(["2006-05-01 00:00", "2006-05-10 18:00", "2006-07-01 00:00"])
+    )
+
+    resultado = no_periodo(tabela, "resolvido_em", date(2006, 5, 1), date(2006, 5, 10))
+
+    assert resultado["id"].tolist() == [1, 2]

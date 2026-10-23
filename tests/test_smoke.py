@@ -1,3 +1,5 @@
+from datetime import date
+
 from streamlit.testing.v1 import AppTest
 
 
@@ -29,3 +31,29 @@ def test_filtro_de_severidade_atualiza_os_cartoes(app_main):
 
     assert not at.exception
     assert at.metric[0].value == "1"
+
+
+def test_periodo_sem_data_final_pede_a_data_final(app_main):
+    at = AppTest.from_file(app_main).run()
+
+    at.date_input[0].set_value((date(2006, 1, 1),)).run()
+
+    assert not at.exception
+    assert at.info[0].value == "Escolha também a data final do período."
+
+
+def test_sem_nenhum_bug_nos_filtros_mostra_aviso(app_main):
+    at = AppTest.from_file(app_main).run()
+
+    at.checkbox(key="severidade_normal").uncheck().run()
+    at.checkbox(key="severidade_major").uncheck().run()
+
+    assert not at.exception
+    assert at.warning[0].value == "Nenhum bug encontrado com esses filtros."
+
+
+def test_dashboard_mostra_o_grafico_de_criados_e_resolvidos(app_main):
+    at = AppTest.from_file(app_main).run()
+
+    assert not at.exception
+    assert at.subheader[0].value == "Bugs criados e resolvidos por mês"
