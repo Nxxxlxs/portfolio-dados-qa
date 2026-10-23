@@ -1,7 +1,12 @@
 import streamlit as st
 
 from app.telas.qualidade.fonte import obter_tabela
-from app.telas.qualidade.graficos import grafico_criados_e_resolvidos, grafico_severidade
+from app.telas.qualidade.graficos import (
+    grafico_criados_e_resolvidos,
+    grafico_reabertura,
+    grafico_severidade,
+    grafico_tempo_resolucao,
+)
 from core.qa.esquema import SEVERIDADES
 from core.qa.filtros import filtrar, filtrar_categorias
 from core.qa.kpis import criados_e_resolvidos_por_mes, resumir_por, resumir_total
@@ -65,9 +70,20 @@ col3.metric("Média (dias)", f"{total['media_dias']:.1f}")
 col4.metric("Taxa de reabertura", f"{total['taxa_reabertura']:.1%}")
 
 por_categoria = filtrar_categorias(tabela, severidades, componentes)
+por_severidade = resumir_por(filtrada, "severidade")
 mensal = criados_e_resolvidos_por_mes(por_categoria, periodo[0], periodo[1])
 
-col_mensal, col_severidade = st.columns([3, 2])
+###################################################################################################
+
+col_mensal, col_tempo = st.columns([3, 2])
+
+with col_tempo:
+    st.subheader("Tempo até a primeira resolução")
+    st.plotly_chart(grafico_tempo_resolucao(por_severidade), width="stretch")
+    st.caption(
+        "A barra é a mediana: metade dos bugs é resolvida em menos tempo que isso. "
+        "O losango é a média, puxada para cima por poucos bugs muito demorados."
+    )
 
 with col_mensal:
     st.subheader("Bugs criados e resolvidos por mês")
@@ -80,10 +96,22 @@ with col_mensal:
         "Os cartões acima consideram os bugs criados no período."
     )
 
+###################################################################################################
+
+col_severidade, col_reabertura = st.columns([3, 2])
+
 with col_severidade:
     st.subheader("Bugs por severidade")
     st.plotly_chart(grafico_severidade(resumir_por(filtrada, "severidade")), width="stretch")
     st.caption("Bugs criados no período, com as categorias marcadas: a mesma base dos cartões.")
+
+with col_reabertura:
+    st.subheader("Taxa de reabertura")
+    st.plotly_chart(grafico_reabertura(por_severidade), width="stretch")
+    st.caption(
+        "Proporção de bugs reabertos depois da primeira resolução. "
+        "Grupos pequenos, como `blocker`, oscilam mais."
+    )
 
 st.page_link(
     "telas/qualidade/dados.py",

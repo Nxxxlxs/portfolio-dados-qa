@@ -60,3 +60,8 @@ Registro das escolhas feitas ao longo do desenvolvimento, com o motivo de cada u
 
 - **Decisão:** barras horizontais, da severidade mais grave para a mais leve, com número e porcentagem em cada barra e cores quentes para as mais graves.
 - **Motivo:** a distribuição é muito desigual (cerca de 77% `normal` e menos de 1% `blocker`), e em gráfico de rosca as fatias pequenas ficariam quase invisíveis. Nas barras a comparação é por comprimento, e o rótulo mostra o valor mesmo para barras curtas.
+
+## Gráficos de tempo e reabertura
+
+- **Decisão:** o tempo até a primeira resolução mostra a mediana (barra) e a média (losango) por severidade, e a taxa de reabertura mostra o tamanho do grupo no rótulo. No layout, o gráfico mensal e o de tempo ficam na linha de cima, e severidade e reabertura na de baixo.
+- **Motivo:** média e mediana juntas mostram o quanto poucos bugs muito demorados puxam a média (em `minor`, 3,2 dias de mediana contra cerca de 93 de média). O tamanho do grupo avisa que taxas de grupos pequenos, como `blocker`, oscilam mais.
