@@ -2,6 +2,7 @@ import streamlit as st
 
 from app.telas.qualidade.fonte import obter_tabela
 from app.telas.qualidade.graficos import (
+    grafico_componentes,
     grafico_criados_e_resolvidos,
     grafico_reabertura,
     grafico_severidade,
@@ -111,6 +112,16 @@ with col_reabertura:
     st.caption(
         "Proporção de bugs reabertos depois da primeira resolução. "
         "Grupos pequenos, como `blocker`, oscilam mais."
+    )
+
+col_componentes, _ = st.columns([3, 2])
+
+with col_componentes:
+    st.subheader("Bugs por componente")
+    st.plotly_chart(grafico_componentes(resumir_por(filtrada, "componente")), width="stretch")
+    st.caption(
+        "As barras mostram quantos bugs cada componente tem. A linha mostra a porcentagem "
+        "acumulada: quanto do total já está coberto somando os componentes da esquerda."
     )
 
 st.page_link(

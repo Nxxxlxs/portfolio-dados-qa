@@ -65,3 +65,8 @@ Registro das escolhas feitas ao longo do desenvolvimento, com o motivo de cada u
 
 - **Decisão:** o tempo até a primeira resolução mostra a mediana (barra) e a média (losango) por severidade, e a taxa de reabertura mostra o tamanho do grupo no rótulo. No layout, o gráfico mensal e o de tempo ficam na linha de cima, e severidade e reabertura na de baixo.
 - **Motivo:** média e mediana juntas mostram o quanto poucos bugs muito demorados puxam a média (em `minor`, 3,2 dias de mediana contra cerca de 93 de média). O tamanho do grupo avisa que taxas de grupos pequenos, como `blocker`, oscilam mais.
+
+## Gráfico de componentes (Pareto)
+
+- **Decisão:** barras de bugs por componente, da maior para a menor, com uma linha de porcentagem acumulada (gráfico de Pareto).
+- **Motivo:** a pergunta é sobre concentração. Dois componentes (Core e UI) reúnem cerca de 69% dos bugs, e a linha de acumulado mostra isso sem precisar somar de cabeça. Uma rosca deixaria os componentes pequenos (APT com 2,1% e Doc com 0,9%) como fatias finas demais para ler.

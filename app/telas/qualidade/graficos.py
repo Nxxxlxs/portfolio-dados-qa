@@ -13,6 +13,10 @@ COR_SEVERIDADE = {
     "trivial": "#b0bec5",
 }
 
+LIMITE_PARETO = 0.8
+COR_PARETO_FORTE = "#00897b"
+COR_PARETO_FRACA = "#80cbc4"
+
 
 def formatar_inteiro(valor: int) -> str:
     return f"{valor:,}".replace(",", ".")
@@ -126,4 +130,54 @@ def grafico_reabertura(resumo: pd.DataFrame) -> Figure:
     )
     figura.update_xaxes(tickformat=".0%", range=[0, dados["taxa_reabertura"].max() * 1.5])
     figura.update_yaxes(categoryorder="array", categoryarray=ordem, autorange="reversed")
+    return figura
+
+
+def grafico_componentes(resumo: pd.DataFrame) -> Figure:
+    """Pareto: barras de bugs por componente, do maior ao menor, e linha de acumulado em %."""
+    dados = resumo.sort_values("bugs", ascending=False)
+    total = dados["bugs"].sum()
+    acumulado = dados["bugs"].cumsum() / total
+    anterior = acumulado.shift(fill_value=0)
+    cores = [COR_PARETO_FORTE if a < LIMITE_PARETO else COR_PARETO_FRACA for a in anterior]
+    figura = Figure(
+        data=[
+            Bar(
+                x=dados["componente"],
+                y=dados["bugs"],
+                name="Bugs",
+                marker_color=cores,
+                text=[
+                    f"{formatar_inteiro(n)} ({formatar_percentual(n / total)})"
+                    for n in dados["bugs"]
+                ],
+                textposition="outside",
+                cliponaxis=False,
+                hovertemplate="%{text}",
+            ),
+            Scatter(
+                x=dados["componente"],
+                y=acumulado,
+                name="Acumulado",
+                mode="lines+markers",
+                yaxis="y2",
+                line={"color": "#ffffff"},
+                text=[formatar_percentual(a) for a in acumulado],
+                hovertemplate="%{text}",
+            ),
+        ]
+    )
+    figura.update_layout(
+        yaxis={"title": {"text": "Bugs"}, "tickformat": "d", "range": [0, total * 1.05]},
+        yaxis2={
+            "overlaying": "y",
+            "side": "right",
+            "range": [0, 1.05],
+            "tickformat": ".0%",
+            "dtick": 0.2,
+            "showgrid": False,
+        },
+        legend={"orientation": "h", "x": 0, "y": 1.12},
+        hovermode="x unified",
+    )
     return figura
