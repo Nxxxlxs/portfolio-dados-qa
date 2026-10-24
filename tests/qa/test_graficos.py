@@ -1,14 +1,17 @@
 import pandas as pd
+import pytest
 
 from app.telas.qualidade.graficos import (
     COR_PARETO_FORTE,
     COR_PARETO_FRACA,
     COR_SEVERIDADE,
+    grafico_backlog,
     grafico_componentes,
     grafico_criados_e_resolvidos,
     grafico_reabertura,
     grafico_severidade,
     grafico_tempo_resolucao,
+    passo_dos_meses,
 )
 
 
@@ -103,3 +106,30 @@ def test_grafico_componentes_ordena_acumula_e_destaca_ate_80_por_cento():
     assert linha.yaxis == "y2"  # pyright: ignore[reportAttributeAccessIssue]
     assert figura.layout.yaxis.range[1] > 10  # pyright: ignore[reportAttributeAccessIssue]
     assert figura.layout.yaxis2.range[1] > 1  # pyright: ignore[reportAttributeAccessIssue]
+
+
+def test_grafico_backlog_mostra_os_valores_por_mes_e_comeca_do_zero():
+    backlog = pd.DataFrame(
+        {"mes": pd.period_range("2006-01", "2006-03", freq="M"), "backlog": [2, 1, 4]}
+    )
+
+    figura = grafico_backlog(backlog)
+
+    assert list(figura.data[0].y) == [2, 1, 4]  # pyright: ignore[reportAttributeAccessIssue]
+    assert figura.layout.yaxis.rangemode == "tozero"  # pyright: ignore[reportAttributeAccessIssue]
+    assert figura.layout.xaxis.dtick == "M1"  # pyright: ignore[reportAttributeAccessIssue]
+
+
+@pytest.mark.parametrize(
+    ("quantidade", "esperado"),
+    [
+        (1, "M1"),
+        (12, "M1"),
+        (13, "M3"),
+        (36, "M3"),
+        (37, "M6"),
+        (65, "M6"),
+    ],
+)
+def test_passo_dos_meses_escolhe_o_intervalo_pela_quantidade(quantidade, esperado):
+    assert passo_dos_meses(quantidade) == esperado

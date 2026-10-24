@@ -26,8 +26,17 @@ def formatar_percentual(proporcao: float) -> str:
     return f"{proporcao:.1%}".replace(".", ",")
 
 
+def passo_dos_meses(quantidade: int) -> str:
+    """Intervalo entre as marcas do eixo de meses: todos, de 3 em 3 ou de 6 em 6."""
+    if quantidade <= 12:
+        return "M1"
+    if quantidade <= 36:
+        return "M3"
+    return "M6"
+
+
 def grafico_criados_e_resolvidos(mensal: pd.DataFrame) -> Figure:
-    """Linhas"""
+    """Retorna um gráfico de linhas com os bugs criados e resolvidos."""
     dados = mensal.assign(mes=mensal["mes"].dt.to_timestamp()).rename(
         columns={"criados": "Criados", "resolvidos": "Resolvidos"}
     )
@@ -41,14 +50,14 @@ def grafico_criados_e_resolvidos(mensal: pd.DataFrame) -> Figure:
     )
     figura.update_traces(hovertemplate="%{y}")
     meses = len(dados)
-    passo = "M1" if meses <= 12 else "M3" if meses <= 36 else "M6"
+    passo = passo_dos_meses(meses)
     figura.update_xaxes(dtick=passo, tickformat="%m/%Y", hoverformat="%m/%Y")
     figura.update_layout(hovermode="x unified")
     return figura
 
 
 def grafico_severidade(resumo: pd.DataFrame) -> Figure:
-    """Barras horizontais"""
+    """Retorna um gráfico de barras horizontais"""
     total = resumo["bugs"].sum()
     ordem = [s for s in SEVERIDADES if s in set(resumo["severidade"])]
     dados = resumo.set_index("severidade").loc[ordem].reset_index()
@@ -75,7 +84,8 @@ def grafico_severidade(resumo: pd.DataFrame) -> Figure:
 
 
 def grafico_tempo_resolucao(resumo: pd.DataFrame) -> Figure:
-    """Mediana (barras) e média (pontos) de dias até a resolução, por severidade."""
+    """Retorna um gráfico com a mediana (barras) e a média (pontos) de dias até a resolução,
+    por severidade."""
     ordem = [s for s in SEVERIDADES if s in set(resumo["severidade"])]
     dados = resumo.set_index("severidade").loc[ordem].reset_index()
     figura = Figure(
@@ -107,7 +117,8 @@ def grafico_tempo_resolucao(resumo: pd.DataFrame) -> Figure:
 
 
 def grafico_reabertura(resumo: pd.DataFrame) -> Figure:
-    """Barras horizontais da taxa de reabertura por severidade, com o tamanho do grupo."""
+    """Retorna um gráfico de barras horizontais da taxa de reabertura por severidade,
+    com o tamanho do grupo."""
     ordem = [s for s in SEVERIDADES if s in set(resumo["severidade"])]
     dados = resumo.set_index("severidade").loc[ordem].reset_index()
     dados["rotulo"] = [
@@ -134,7 +145,8 @@ def grafico_reabertura(resumo: pd.DataFrame) -> Figure:
 
 
 def grafico_componentes(resumo: pd.DataFrame) -> Figure:
-    """Pareto: barras de bugs por componente, do maior ao menor, e linha de acumulado em %."""
+    """Retorna um gráfico de Pareto: barras de bugs por componente, do maior ao menor,
+    e linha de acumulado em %."""
     dados = resumo.sort_values("bugs", ascending=False)
     total = dados["bugs"].sum()
     acumulado = dados["bugs"].cumsum() / total
@@ -180,4 +192,22 @@ def grafico_componentes(resumo: pd.DataFrame) -> Figure:
         legend={"orientation": "h", "x": 0, "y": 1.12},
         hovermode="x unified",
     )
+    return figura
+
+
+def grafico_backlog(backlog: pd.DataFrame) -> Figure:
+    """Retorna um gráfico de área dos bugs em aberto no fim de cada mês,
+    a partir de backlog_por_mes."""
+    dados = backlog.assign(mes=backlog["mes"].dt.to_timestamp())
+    figura = px.area(
+        dados,
+        x="mes",
+        y="backlog",
+        labels={"mes": "Mês", "backlog": "Bugs em aberto"},
+        color_discrete_sequence=["#5c6bc0"],
+    )
+    figura.update_traces(hovertemplate="%{y}")
+    figura.update_xaxes(dtick=passo_dos_meses(len(dados)), tickformat="%m/%Y", hoverformat="%m/%Y")
+    figura.update_yaxes(tickformat="d", rangemode="tozero")
+    figura.update_layout(hovermode="x unified")
     return figura

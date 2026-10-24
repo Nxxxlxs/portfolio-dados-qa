@@ -4,6 +4,7 @@ import pandas as pd
 from pytest import approx
 
 from core.qa.kpis import (
+    backlog_por_mes,
     contar_por_mes,
     criados_e_resolvidos_por_mes,
     resumir_por,
@@ -98,3 +99,22 @@ def test_criados_e_resolvidos_no_periodo_usa_so_os_meses_e_datas_do_periodo():
     ]
     assert resultado["criados"].tolist() == [2, 0, 1]
     assert resultado["resolvidos"].tolist() == [0, 1, 1]
+
+
+def test_backlog_por_mes_acumula_desde_o_inicio_e_mostra_so_o_periodo():
+    tabela = pd.DataFrame(
+        {
+            "criado_em": pd.to_datetime(["2006-01-05", "2006-01-20", "2006-03-10"]),
+            "primeira_resolucao_em": pd.to_datetime(["2006-02-10", "2006-03-01", "2006-06-15"]),
+        }
+    )
+
+    resultado = backlog_por_mes(tabela, date(2006, 2, 1), date(2006, 5, 31))
+
+    assert resultado["mes"].tolist() == [
+        pd.Period("2006-02"),
+        pd.Period("2006-03"),
+        pd.Period("2006-04"),
+        pd.Period("2006-05"),
+    ]
+    assert resultado["backlog"].tolist() == [1, 1, 1, 1]

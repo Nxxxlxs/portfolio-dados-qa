@@ -2,6 +2,7 @@ import streamlit as st
 
 from app.telas.qualidade.fonte import obter_tabela
 from app.telas.qualidade.graficos import (
+    grafico_backlog,
     grafico_componentes,
     grafico_criados_e_resolvidos,
     grafico_reabertura,
@@ -10,7 +11,7 @@ from app.telas.qualidade.graficos import (
 )
 from core.qa.esquema import SEVERIDADES
 from core.qa.filtros import filtrar, filtrar_categorias
-from core.qa.kpis import criados_e_resolvidos_por_mes, resumir_por, resumir_total
+from core.qa.kpis import backlog_por_mes, criados_e_resolvidos_por_mes, resumir_por, resumir_total
 
 
 def grupo_de_caixas(titulo: str, opcoes: list[str], chave: str, por_linha: int = 3) -> list[str]:
@@ -114,7 +115,7 @@ with col_reabertura:
         "Grupos pequenos, como `blocker`, oscilam mais."
     )
 
-col_componentes, _ = st.columns([3, 2])
+col_componentes, col_backlog = st.columns([3, 2])
 
 with col_componentes:
     st.subheader("Bugs por componente")
@@ -122,6 +123,17 @@ with col_componentes:
     st.caption(
         "As barras mostram quantos bugs cada componente tem. A linha mostra a porcentagem "
         "acumulada: quanto do total já está coberto somando os componentes da esquerda."
+    )
+
+with col_backlog:
+    st.subheader("Evolução do backlog")
+    backlog = backlog_por_mes(por_categoria, periodo[0], periodo[1])
+    st.plotly_chart(grafico_backlog(backlog), width="stretch")
+    st.caption(
+        "Bugs em aberto no fim de cada mês: criados menos resolvidos, somando desde o primeiro "
+        "bug da base. Reaberturas não entram na conta. A base só tem bugs que acabam "
+        "resolvidos, então a queda no fim, até zero, vem dessa limitação e não "
+        "necessariamente do projeto."
     )
 
 st.page_link(
