@@ -1,7 +1,10 @@
 import pandas as pd
 
 from app.telas.qualidade.graficos import (
+    COR_PARETO_FORTE,
+    COR_PARETO_FRACA,
     COR_SEVERIDADE,
+    grafico_componentes,
     grafico_criados_e_resolvidos,
     grafico_reabertura,
     grafico_severidade,
@@ -84,3 +87,19 @@ def test_grafico_reabertura_ordena_e_mostra_taxa_com_tamanho_do_grupo():
     assert list(barras.y) == ["critical", "normal"]  # pyright: ignore[reportAttributeAccessIssue]
     assert list(barras.x) == [0.125, 0.09]  # pyright: ignore[reportAttributeAccessIssue]
     assert list(barras.text) == ["12,5% (de 8)", "9,0% (de 1.000)"]  # pyright: ignore[reportAttributeAccessIssue]
+
+
+def test_grafico_componentes_ordena_acumula_e_destaca_ate_80_por_cento():
+    resumo = pd.DataFrame({"componente": ["UI", "Doc", "Core"], "bugs": [3, 1, 6]})
+
+    figura = grafico_componentes(resumo)
+
+    barras, linha = figura.data
+    assert list(barras.x) == ["Core", "UI", "Doc"]  # pyright: ignore[reportAttributeAccessIssue]
+    assert list(barras.y) == [6, 3, 1]  # pyright: ignore[reportAttributeAccessIssue]
+    assert list(barras.text) == ["6 (60,0%)", "3 (30,0%)", "1 (10,0%)"]  # pyright: ignore[reportAttributeAccessIssue]
+    assert list(barras.marker.color) == [COR_PARETO_FORTE, COR_PARETO_FORTE, COR_PARETO_FRACA]  # pyright: ignore[reportAttributeAccessIssue]
+    assert list(linha.y) == [0.6, 0.9, 1.0]  # pyright: ignore[reportAttributeAccessIssue]
+    assert linha.yaxis == "y2"  # pyright: ignore[reportAttributeAccessIssue]
+    assert figura.layout.yaxis.range[1] > 10  # pyright: ignore[reportAttributeAccessIssue]
+    assert figura.layout.yaxis2.range[1] > 1  # pyright: ignore[reportAttributeAccessIssue]

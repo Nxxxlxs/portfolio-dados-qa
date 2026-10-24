@@ -61,4 +61,5 @@ def test_dashboard_mostra_os_graficos(app_main):
         "Tempo até a primeira resolução",
         "Bugs por severidade",
         "Taxa de reabertura",
+        "Bugs por componente",
     ]
