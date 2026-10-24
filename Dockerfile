@@ -18,6 +18,7 @@ RUN uv sync --locked --no-dev --no-install-project
 # 2) Depois o código
 COPY app ./app
 COPY core ./core
+COPY .streamlit ./.streamlit
 
 EXPOSE 8501
 

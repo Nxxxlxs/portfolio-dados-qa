@@ -76,3 +76,8 @@ Registro das escolhas feitas ao longo do desenvolvimento, com o motivo de cada u
 - **Decisão:** o backlog é a soma acumulada de bugs criados menos bugs com primeira resolução, calculada desde o primeiro bug da base. O período do filtro escolhe só os meses mostrados, e as caixas de severidade e componente valem para a conta.
 - **Motivo:** o backlog de um mês depende de tudo o que ficou aberto antes, então cortar o início pelo período daria valores errados.
 - **Limitações:** reaberturas não entram na conta, e como a base só tem bugs que acabam resolvidos, a curva termina em zero por construção. O pico é de 531 bugs em março de 2007, com um platô entre 400 e 460 até 2009. Não foi possível dizer quanto da queda depois de 2009 é efeito da base, e a queda brusca dos últimos cinco meses é a parte mais suspeita. O dashboard avisa isso na legenda.
+
+## Explorador de dados
+
+- **Decisão:** a página mostra a tabela tratada com a tabela nativa do Streamlit (busca e ordenação por coluna), com colunas em português e datas no formato brasileiro. A exportação (download em CSV e cópia) fica desativada pela configuração `client.disableDataExport`.
+- **Motivo:** a base não informa licença de uso, então o app não oferece a tabela para baixar.

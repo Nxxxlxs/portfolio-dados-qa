@@ -25,6 +25,8 @@ def tabela_falsa(monkeypatch):
             "severidade": ["normal", "major"],
             "componente": ["Core", "UI"],
             "reaberto": [True, False],
+            "severidade_na_resolucao": ["normal", "major"],
+            "n_reaberturas": [1, 0],
         }
     )
     monkeypatch.setattr("app.telas.qualidade.fonte.carregar_tabela", lambda: tabela)
