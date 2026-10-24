@@ -1,10 +1,13 @@
 import pandas as pd
 import pytest
+from plotly.graph_objects import Figure
 
 from app.telas.qualidade.graficos import (
+    ALTURA_GRAFICO,
     COR_PARETO_FORTE,
     COR_PARETO_FRACA,
     COR_SEVERIDADE,
+    compactar,
     grafico_backlog,
     grafico_componentes,
     grafico_criados_e_resolvidos,
@@ -133,3 +136,10 @@ def test_grafico_backlog_mostra_os_valores_por_mes_e_comeca_do_zero():
 )
 def test_passo_dos_meses_escolhe_o_intervalo_pela_quantidade(quantidade, esperado):
     assert passo_dos_meses(quantidade) == esperado
+
+
+def test_compactar_fixa_altura_e_margens():
+    figura = compactar(Figure())
+
+    assert figura.layout.height == ALTURA_GRAFICO  # pyright: ignore[reportAttributeAccessIssue]
+    assert figura.layout.margin.t == 30  # pyright: ignore[reportAttributeAccessIssue]

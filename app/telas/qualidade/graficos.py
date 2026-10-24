@@ -16,6 +16,14 @@ COR_SEVERIDADE = {
 LIMITE_PARETO = 0.8
 COR_PARETO_FORTE = "#00897b"
 COR_PARETO_FRACA = "#80cbc4"
+ALTURA_GRAFICO = 260
+
+
+def compactar(figura: Figure, altura: int = ALTURA_GRAFICO) -> Figure:
+    """Retorna a figura com a altura fixa e as margens reduzidas,
+    para os gráficos caberem melhor na tela."""
+    figura.update_layout(height=altura, margin={"l": 10, "r": 10, "t": 30, "b": 10})
+    return figura
 
 
 def formatar_inteiro(valor: int) -> str:
@@ -53,7 +61,7 @@ def grafico_criados_e_resolvidos(mensal: pd.DataFrame) -> Figure:
     passo = passo_dos_meses(meses)
     figura.update_xaxes(dtick=passo, tickformat="%m/%Y", hoverformat="%m/%Y")
     figura.update_layout(hovermode="x unified")
-    return figura
+    return compactar(figura)
 
 
 def grafico_severidade(resumo: pd.DataFrame) -> Figure:
@@ -80,7 +88,7 @@ def grafico_severidade(resumo: pd.DataFrame) -> Figure:
     )
     figura.update_xaxes(range=[0, dados["bugs"].max() * 1.3], tickformat="d")
     figura.update_yaxes(categoryorder="array", categoryarray=ordem, autorange="reversed")
-    return figura
+    return compactar(figura)
 
 
 def grafico_tempo_resolucao(resumo: pd.DataFrame) -> Figure:
@@ -113,7 +121,7 @@ def grafico_tempo_resolucao(resumo: pd.DataFrame) -> Figure:
     )
     figura.update_xaxes(title_text="Severidade")
     figura.update_layout(hovermode="x unified")
-    return figura
+    return compactar(figura)
 
 
 def grafico_reabertura(resumo: pd.DataFrame) -> Figure:
@@ -141,7 +149,7 @@ def grafico_reabertura(resumo: pd.DataFrame) -> Figure:
     )
     figura.update_xaxes(tickformat=".0%", range=[0, dados["taxa_reabertura"].max() * 1.5])
     figura.update_yaxes(categoryorder="array", categoryarray=ordem, autorange="reversed")
-    return figura
+    return compactar(figura)
 
 
 def grafico_componentes(resumo: pd.DataFrame) -> Figure:
@@ -192,7 +200,7 @@ def grafico_componentes(resumo: pd.DataFrame) -> Figure:
         legend={"orientation": "h", "x": 0, "y": 1.12},
         hovermode="x unified",
     )
-    return figura
+    return compactar(figura)
 
 
 def grafico_backlog(backlog: pd.DataFrame) -> Figure:
@@ -210,4 +218,4 @@ def grafico_backlog(backlog: pd.DataFrame) -> Figure:
     figura.update_xaxes(dtick=passo_dos_meses(len(dados)), tickformat="%m/%Y", hoverformat="%m/%Y")
     figura.update_yaxes(tickformat="d", rangemode="tozero")
     figura.update_layout(hovermode="x unified")
-    return figura
+    return compactar(figura)
