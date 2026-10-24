@@ -62,4 +62,5 @@ def test_dashboard_mostra_os_graficos(app_main):
         "Bugs por severidade",
         "Taxa de reabertura",
         "Bugs por componente",
+        "Evolução do backlog",
     ]

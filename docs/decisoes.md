@@ -70,3 +70,9 @@ Registro das escolhas feitas ao longo do desenvolvimento, com o motivo de cada u
 
 - **Decisão:** barras de bugs por componente, da maior para a menor, com uma linha de porcentagem acumulada (gráfico de Pareto).
 - **Motivo:** a pergunta é sobre concentração. Dois componentes (Core e UI) reúnem cerca de 69% dos bugs, e a linha de acumulado mostra isso sem precisar somar de cabeça. Uma rosca deixaria os componentes pequenos (APT com 2,1% e Doc com 0,9%) como fatias finas demais para ler.
+
+## Evolução do backlog
+
+- **Decisão:** o backlog é a soma acumulada de bugs criados menos bugs com primeira resolução, calculada desde o primeiro bug da base. O período do filtro escolhe só os meses mostrados, e as caixas de severidade e componente valem para a conta.
+- **Motivo:** o backlog de um mês depende de tudo o que ficou aberto antes, então cortar o início pelo período daria valores errados.
+- **Limitações:** reaberturas não entram na conta, e como a base só tem bugs que acabam resolvidos, a curva termina em zero por construção. O pico é de 531 bugs em março de 2007, com um platô entre 400 e 460 até 2009. Não foi possível dizer quanto da queda depois de 2009 é efeito da base, e a queda brusca dos últimos cinco meses é a parte mais suspeita. O dashboard avisa isso na legenda.

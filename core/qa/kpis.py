@@ -8,7 +8,8 @@ from core.qa.filtros import no_periodo
 def contar_por_mes(
     tabela: pd.DataFrame, coluna: str, meses: pd.PeriodIndex | None = None
 ) -> pd.DataFrame:
-    """Conta quantos bugs caem em cada mês da coluna de data pedida, sem pular meses."""
+    """Retorna uma tabela com quantos bugs caem em cada mês da coluna de data pedida,
+    sem pular meses."""
     do_mes = tabela[coluna].dt.to_period("M")
     contagem = do_mes.value_counts()
     if meses is None:
@@ -20,7 +21,7 @@ def contar_por_mes(
 def criados_e_resolvidos_por_mes(
     tabela: pd.DataFrame, inicio: date | None = None, fim: date | None = None
 ) -> pd.DataFrame:
-    """Conta, por mês, os bugs criados e os resolvidos, cada um pela própria data.
+    """Retorna a soma, por mês, dos bugs criados e os resolvidos, cada um pela própria data.
 
     Com início e fim, só entram os meses do período e as datas dentro dele.
     """
@@ -41,12 +42,13 @@ def criados_e_resolvidos_por_mes(
 
 
 def so_resolvidos(tabela: pd.DataFrame) -> pd.DataFrame:
-    """Mantém só os bugs que tiveram primeira resolução, os únicos que podem ser reabertos."""
+    """Retorna uma tabela contendo só os bugs que tiveram primeira resolução,
+    os únicos que podem ser reabertos."""
     return tabela[tabela["primeira_resolucao_em"].notna()]
 
 
 def resumir_por(tabela: pd.DataFrame, coluna: str) -> pd.DataFrame:
-    """Resume os bugs já resolvidos de cada valor da coluna: tempo de resolução e reabertura."""
+    """Retorna os bugs já resolvidos de cada valor da coluna: tempo de resolução e reabertura."""
     resolvidos = so_resolvidos(tabela)
     return (
         resolvidos.groupby(coluna)
@@ -61,7 +63,8 @@ def resumir_por(tabela: pd.DataFrame, coluna: str) -> pd.DataFrame:
 
 
 def resumir_total(tabela: pd.DataFrame) -> dict:
-    """Resume todos os bugs já resolvidos: quantidade, tempo de resolução e reabertura."""
+    """Retorna o resumo de todos os bugs já resolvidos com quantidade,
+    tempo de resolução e reabertura."""
     resolvidos = so_resolvidos(tabela)
     return {
         "bugs": len(resolvidos),
@@ -69,3 +72,12 @@ def resumir_total(tabela: pd.DataFrame) -> dict:
         "mediana_dias": resolvidos["dias_ate_resolucao"].median(),
         "taxa_reabertura": resolvidos["reaberto"].mean(),
     }
+
+
+def backlog_por_mes(tabela: pd.DataFrame, inicio: date, fim: date) -> pd.DataFrame:
+    """Reorna os bugs em aberto no fim de cada mês do período,
+    contando desde o primeiro bug da base."""
+    mensal = criados_e_resolvidos_por_mes(tabela)
+    mensal["backlog"] = (mensal["criados"] - mensal["resolvidos"]).cumsum()
+    do_periodo = mensal["mes"].isin(pd.period_range(inicio, fim, freq="M"))
+    return mensal.loc[do_periodo, ["mes", "backlog"]].reset_index(drop=True)
