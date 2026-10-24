@@ -81,3 +81,12 @@ Registro das escolhas feitas ao longo do desenvolvimento, com o motivo de cada u
 
 - **Decisão:** a página mostra a tabela tratada com a tabela nativa do Streamlit (busca e ordenação por coluna), com colunas em português e datas no formato brasileiro. A exportação (download em CSV e cópia) fica desativada pela configuração `client.disableDataExport`.
 - **Motivo:** a base não informa licença de uso, então o app não oferece a tabela para baixar.
+
+## Tendência e sazonalidade: análise exploratória, sem gráfico
+
+- **Decisão:** não há gráfico de sazonalidade no dashboard por enquanto. A tendência já aparece nos gráficos mensal e de backlog. A análise de sazonalidade ficou registrada aqui.
+- **Motivo:** são poucos anos (4 a 5 observações por mês do calendário) e a explicação do método pesa mais que a informação entregue. Pode voltar numa versão futura ou em outra base.
+- **Método:** primeiro dividir cada mês pela média do seu ano, mas a queda forte do volume (de 3.760 bugs criados em 2006 para 1.100 em 2010) faz os primeiros meses de cada ano parecerem altos só pela tendência. Refazer dividindo cada mês pela média móvel de 12 meses centrada nele.
+- **Resultado:** março (índice médio de 1,21) e maio (1,47) ficam acima da média nos anos analisados, e dezembro (0,73) e janeiro (0,83) abaixo. Entre junho e dezembro os índices ficam perto de 0,9, com variação entre os anos.
+- **Hipótese não verificada:** a queda brusca de maio para junho pode estar ligada ao ciclo de lançamentos anuais do Eclipse, que pela amostra parece fechar em maio/junho.
+- **Limitações:** 4 a 5 anos por mês, a base termina em maio de 2011 e a mesma limitação de bugs só resolvidos já registrada vale aqui.
