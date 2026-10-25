@@ -1,5 +1,6 @@
 import streamlit as st
 
+from app.style.style import aplicar_estilo
 from app.telas.qualidade.fonte import obter_tabela
 from app.telas.qualidade.graficos import (
     grafico_backlog,
@@ -14,7 +15,8 @@ from core.qa.filtros import filtrar, filtrar_categorias
 from core.qa.kpis import backlog_por_mes, criados_e_resolvidos_por_mes, resumir_por, resumir_total
 
 
-def grupo_de_caixas(titulo: str, opcoes: list[str], chave: str, por_linha: int = 3) -> list[str]:
+def grupo_de_caixas(titulo: str, opcoes: list[str], chave: str, por_linha: int = 2) -> list[str]:
+    """Retorna uma caixa de marcar por opção, em linhas de `por_linha`, e devolve as marcadas."""
     st.caption(titulo)
     marcadas = []
     for inicio in range(0, len(opcoes), por_linha):
@@ -25,6 +27,8 @@ def grupo_de_caixas(titulo: str, opcoes: list[str], chave: str, por_linha: int =
                 marcadas.append(opcao)
     return marcadas
 
+
+aplicar_estilo()
 
 col_title = st.markdown(
     "<h1 style='display: inline; font-size: 24px; margin-right: 10px;'>"
@@ -37,9 +41,9 @@ tabela = obter_tabela()
 primeiro_dia = tabela["criado_em"].min().date()
 ultimo_dia = tabela["criado_em"].max().date()
 
-col_tilte, col_periodo, col_severidade, col_componente = st.columns([2, 1, 1, 1])
 
-with col_periodo:
+with st.sidebar:
+    st.markdown("**Filtros**")
     periodo = st.date_input(
         "Período de criação",
         value=(primeiro_dia, ultimo_dia),
@@ -47,12 +51,13 @@ with col_periodo:
         max_value=ultimo_dia,
         format="DD/MM/YYYY",
     )
-
-with col_severidade:
     severidades = grupo_de_caixas("Severidade", SEVERIDADES, "severidade")
-
-with col_componente:
     componentes = grupo_de_caixas("Componente", sorted(tabela["componente"].unique()), "componente")
+    st.page_link(
+        "telas/qualidade/dados.py",
+        label="Explorar dados",
+        icon=":material/table_view:",
+    )
 
 if len(periodo) != 2:
     st.info("Escolha também a data final do período.")
@@ -66,9 +71,9 @@ if filtrada.empty:
 total = resumir_total(filtrada)
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Bugs analisados", f"{total['bugs']:,}".replace(",", "."))
-col2.metric("Mediana (dias)", f"{total['mediana_dias']:.1f}")
-col3.metric("Média (dias)", f"{total['media_dias']:.1f}")
+col1.metric("Total de Bugs", f"{total['bugs']:,}".replace(",", "."))
+col2.metric("Mediana de resolução (dias)", f"{total['mediana_dias']:.1f}")
+col3.metric("Média de resolução (dias)", f"{total['media_dias']:.1f}")
 col4.metric("Taxa de reabertura", f"{total['taxa_reabertura']:.1%}")
 
 por_categoria = filtrar_categorias(tabela, severidades, componentes)
@@ -77,67 +82,78 @@ mensal = criados_e_resolvidos_por_mes(por_categoria, periodo[0], periodo[1])
 
 ###################################################################################################
 
-col_mensal, col_tempo = st.columns([3, 2])
-
-with col_tempo:
-    st.subheader("Tempo até a primeira resolução")
-    st.plotly_chart(grafico_tempo_resolucao(por_severidade), width="stretch")
-    st.caption(
-        "A barra é a mediana: metade dos bugs é resolvida em menos tempo que isso. "
-        "O losango é a média, puxada para cima por poucos bugs muito demorados."
-    )
+col_mensal, col_componentes, col_backlog = st.columns([1, 1, 1])
 
 with col_mensal:
-    st.subheader("Bugs criados e resolvidos por mês")
+    st.text(
+        "Bugs criados e resolvidos por mês",
+        help=(
+            "Os Bugs criados e resolvidos são contados cada um pela sua própria data,"
+            " dentro do período "
+            f"escolhido. Os dados vão até {ultimo_dia:%d/%m/%Y}, então o último "
+            "mês está incompleto. "
+            "Os cartões acima consideram os bugs criados no período."
+        ),
+    )
+
     por_categoria = filtrar_categorias(tabela, severidades, componentes)
     mensal = criados_e_resolvidos_por_mes(por_categoria, periodo[0], periodo[1])
     st.plotly_chart(grafico_criados_e_resolvidos(mensal), width="stretch")
-    st.caption(
-        "Criados e resolvidos são contados cada um pela sua própria data, dentro do período "
-        f"escolhido. Os dados vão até {ultimo_dia:%d/%m/%Y}, então o último mês está incompleto. "
-        "Os cartões acima consideram os bugs criados no período."
+
+with col_componentes:
+    st.text(
+        "Bugs por componente",
+        help=(
+            "As barras mostram quantos bugs cada componente tem."
+            " A linha mostra a porcentagem "
+            "acumulada: quanto do total já está coberto somando os componentes da esquerda."
+        ),
     )
+    st.plotly_chart(grafico_componentes(resumir_por(filtrada, "componente")), width="stretch")
+
+with col_backlog:
+    st.text(
+        "Evolução do backlog",
+        help=(
+            "Os bugs em aberto no fim de cada mês: criados menos resolvidos,"
+            " somando desde o primeiro "
+            "bug da base. Reaberturas não entram na conta. A base só tem bugs que acabam "
+            "resolvidos, então a queda no fim, até zero, vem dessa limitação e não "
+            "necessariamente do projeto."
+        ),
+    )
+    backlog = backlog_por_mes(por_categoria, periodo[0], periodo[1])
+    st.plotly_chart(grafico_backlog(backlog), width="stretch")
 
 ###################################################################################################
 
-col_severidade, col_reabertura = st.columns([3, 2])
+col_severidade, col_tempo, col_reabertura = st.columns([1, 1, 1])
 
 with col_severidade:
-    st.subheader("Bugs por severidade")
+    st.text(
+        "Bugs por severidade",
+        help=(
+            "Os bugs criados no período, com as categorias marcadas. Tem a mesma base dos cartões."
+        ),
+    )
     st.plotly_chart(grafico_severidade(resumir_por(filtrada, "severidade")), width="stretch")
-    st.caption("Bugs criados no período, com as categorias marcadas: a mesma base dos cartões.")
+
+with col_tempo:
+    st.text(
+        "Tempo até a primeira resolução",
+        help=(
+            "A barra representa a mediana do tempo de resolução. "
+            "O losango representa a média que é puxada para cima por poucos bugs muito demorados."
+        ),
+    )
+    st.plotly_chart(grafico_tempo_resolucao(por_severidade), width="stretch")
 
 with col_reabertura:
-    st.subheader("Taxa de reabertura")
+    st.text(
+        "Taxa de reabertura",
+        help=(
+            "Proporção de bugs reabertos depois da primeira resolução. "
+            "Grupos pequenos, como `blocker`, oscilam mais."
+        ),
+    )
     st.plotly_chart(grafico_reabertura(por_severidade), width="stretch")
-    st.caption(
-        "Proporção de bugs reabertos depois da primeira resolução. "
-        "Grupos pequenos, como `blocker`, oscilam mais."
-    )
-
-col_componentes, col_backlog = st.columns([3, 2])
-
-with col_componentes:
-    st.subheader("Bugs por componente")
-    st.plotly_chart(grafico_componentes(resumir_por(filtrada, "componente")), width="stretch")
-    st.caption(
-        "As barras mostram quantos bugs cada componente tem. A linha mostra a porcentagem "
-        "acumulada: quanto do total já está coberto somando os componentes da esquerda."
-    )
-
-with col_backlog:
-    st.subheader("Evolução do backlog")
-    backlog = backlog_por_mes(por_categoria, periodo[0], periodo[1])
-    st.plotly_chart(grafico_backlog(backlog), width="stretch")
-    st.caption(
-        "Bugs em aberto no fim de cada mês: criados menos resolvidos, somando desde o primeiro "
-        "bug da base. Reaberturas não entram na conta. A base só tem bugs que acabam "
-        "resolvidos, então a queda no fim, até zero, vem dessa limitação e não "
-        "necessariamente do projeto."
-    )
-
-st.page_link(
-    "telas/qualidade/dados.py",
-    label="Explorar dados",
-    icon=":material/table_view:",
-)

@@ -1,3 +1,5 @@
+import math
+
 import pandas as pd
 import plotly.express as px
 from plotly.graph_objects import Bar, Figure, Scatter
@@ -16,6 +18,15 @@ COR_SEVERIDADE = {
 LIMITE_PARETO = 0.8
 COR_PARETO_FORTE = "#00897b"
 COR_PARETO_FRACA = "#80cbc4"
+ALTURA_GRAFICO = 320
+PASSOS_EM_MESES = (1, 2, 3, 6, 12)
+
+
+def compactar(figura: Figure, altura: int = ALTURA_GRAFICO) -> Figure:
+    """Retorna a figura com a altura fixa e as margens reduzidas,
+    para os gráficos caberem melhor na tela."""
+    figura.update_layout(height=altura, margin={"l": 10, "r": 10, "t": 30, "b": 10})
+    return figura
 
 
 def formatar_inteiro(valor: int) -> str:
@@ -26,13 +37,13 @@ def formatar_percentual(proporcao: float) -> str:
     return f"{proporcao:.1%}".replace(".", ",")
 
 
-def passo_dos_meses(quantidade: int) -> str:
-    """Intervalo entre as marcas do eixo de meses: todos, de 3 em 3 ou de 6 em 6."""
-    if quantidade <= 12:
-        return "M1"
-    if quantidade <= 36:
-        return "M3"
-    return "M6"
+def eixo_de_meses(quantidade: int, maximo_de_marcas: int = 8) -> dict[str, str | int]:
+    """Retorna as configurações para as marcas do eixo de meses:
+    o menor intervalo que não passa do máximo de marcas."""
+    passo = next((p for p in PASSOS_EM_MESES if math.ceil(quantidade / p) <= maximo_de_marcas), 12)
+    if passo == 12:
+        return {"dtick": "M12", "tickformat": "%Y", "tickangle": 0}
+    return {"dtick": f"M{passo}", "tickformat": "%m<br>%Y", "tickangle": 0}
 
 
 def grafico_criados_e_resolvidos(mensal: pd.DataFrame) -> Figure:
@@ -49,11 +60,10 @@ def grafico_criados_e_resolvidos(mensal: pd.DataFrame) -> Figure:
         markers=True,
     )
     figura.update_traces(hovertemplate="%{y}")
-    meses = len(dados)
-    passo = passo_dos_meses(meses)
-    figura.update_xaxes(dtick=passo, tickformat="%m/%Y", hoverformat="%m/%Y")
+
+    figura.update_xaxes(eixo_de_meses(len(dados)), hoverformat="%m/%Y")
     figura.update_layout(hovermode="x unified")
-    return figura
+    return compactar(figura)
 
 
 def grafico_severidade(resumo: pd.DataFrame) -> Figure:
@@ -80,7 +90,8 @@ def grafico_severidade(resumo: pd.DataFrame) -> Figure:
     )
     figura.update_xaxes(range=[0, dados["bugs"].max() * 1.3], tickformat="d")
     figura.update_yaxes(categoryorder="array", categoryarray=ordem, autorange="reversed")
-    return figura
+    figura.update_layout(width=260)
+    return compactar(figura)
 
 
 def grafico_tempo_resolucao(resumo: pd.DataFrame) -> Figure:
@@ -113,7 +124,7 @@ def grafico_tempo_resolucao(resumo: pd.DataFrame) -> Figure:
     )
     figura.update_xaxes(title_text="Severidade")
     figura.update_layout(hovermode="x unified")
-    return figura
+    return compactar(figura)
 
 
 def grafico_reabertura(resumo: pd.DataFrame) -> Figure:
@@ -141,7 +152,7 @@ def grafico_reabertura(resumo: pd.DataFrame) -> Figure:
     )
     figura.update_xaxes(tickformat=".0%", range=[0, dados["taxa_reabertura"].max() * 1.5])
     figura.update_yaxes(categoryorder="array", categoryarray=ordem, autorange="reversed")
-    return figura
+    return compactar(figura)
 
 
 def grafico_componentes(resumo: pd.DataFrame) -> Figure:
@@ -192,7 +203,7 @@ def grafico_componentes(resumo: pd.DataFrame) -> Figure:
         legend={"orientation": "h", "x": 0, "y": 1.12},
         hovermode="x unified",
     )
-    return figura
+    return compactar(figura)
 
 
 def grafico_backlog(backlog: pd.DataFrame) -> Figure:
@@ -207,7 +218,7 @@ def grafico_backlog(backlog: pd.DataFrame) -> Figure:
         color_discrete_sequence=["#5c6bc0"],
     )
     figura.update_traces(hovertemplate="%{y}")
-    figura.update_xaxes(dtick=passo_dos_meses(len(dados)), tickformat="%m/%Y", hoverformat="%m/%Y")
+    figura.update_xaxes(eixo_de_meses(len(dados)), hoverformat="%m/%Y")
     figura.update_yaxes(tickformat="d", rangemode="tozero")
     figura.update_layout(hovermode="x unified")
-    return figura
+    return compactar(figura)

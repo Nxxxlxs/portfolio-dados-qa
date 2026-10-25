@@ -1,17 +1,20 @@
 import pandas as pd
 import pytest
+from plotly.graph_objects import Figure
 
 from app.telas.qualidade.graficos import (
+    ALTURA_GRAFICO,
     COR_PARETO_FORTE,
     COR_PARETO_FRACA,
     COR_SEVERIDADE,
+    compactar,
+    eixo_de_meses,
     grafico_backlog,
     grafico_componentes,
     grafico_criados_e_resolvidos,
     grafico_reabertura,
     grafico_severidade,
     grafico_tempo_resolucao,
-    passo_dos_meses,
 )
 
 
@@ -40,7 +43,7 @@ def test_eixo_mostra_todos_os_meses_em_periodo_curto_e_espaca_em_periodo_longo()
     longo = grafico_criados_e_resolvidos(mensal(65))
 
     assert curto.layout.xaxis.dtick == "M1"
-    assert longo.layout.xaxis.dtick == "M6"
+    assert longo.layout.xaxis.dtick == "M12"
 
 
 def test_grafico_severidade_ordena_da_mais_grave_e_escreve_numero_e_porcentagem():
@@ -121,15 +124,30 @@ def test_grafico_backlog_mostra_os_valores_por_mes_e_comeca_do_zero():
 
 
 @pytest.mark.parametrize(
-    ("quantidade", "esperado"),
+    ("quantidade", "maximo", "dtick", "formato"),
     [
-        (1, "M1"),
-        (12, "M1"),
-        (13, "M3"),
-        (36, "M3"),
-        (37, "M6"),
-        (65, "M6"),
+        (5, 8, "M1", "%m<br>%Y"),
+        (8, 8, "M1", "%m<br>%Y"),
+        (9, 8, "M2", "%m<br>%Y"),
+        (16, 8, "M2", "%m<br>%Y"),
+        (17, 8, "M3", "%m<br>%Y"),
+        (25, 8, "M6", "%m<br>%Y"),
+        (48, 8, "M6", "%m<br>%Y"),
+        (49, 8, "M12", "%Y"),
+        (65, 8, "M12", "%Y"),
+        (12, 12, "M1", "%m<br>%Y"),
     ],
 )
-def test_passo_dos_meses_escolhe_o_intervalo_pela_quantidade(quantidade, esperado):
-    assert passo_dos_meses(quantidade) == esperado
+def test_eixo_de_meses_respeita_o_maximo_de_marcas(quantidade, maximo, dtick, formato):
+    eixo = eixo_de_meses(quantidade, maximo)
+
+    assert eixo["dtick"] == dtick
+    assert eixo["tickformat"] == formato
+    assert eixo["tickangle"] == 0
+
+
+def test_compactar_fixa_altura_e_margens():
+    figura = compactar(Figure())
+
+    assert figura.layout.height == ALTURA_GRAFICO  # pyright: ignore[reportAttributeAccessIssue]
+    assert figura.layout.margin.t == 30  # pyright: ignore[reportAttributeAccessIssue]

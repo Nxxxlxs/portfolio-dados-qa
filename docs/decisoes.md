@@ -90,3 +90,10 @@ Registro das escolhas feitas ao longo do desenvolvimento, com o motivo de cada u
 - **Resultado:** março (índice médio de 1,21) e maio (1,47) ficam acima da média nos anos analisados, e dezembro (0,73) e janeiro (0,83) abaixo. Entre junho e dezembro os índices ficam perto de 0,9, com variação entre os anos.
 - **Hipótese não verificada:** a queda brusca de maio para junho pode estar ligada ao ciclo de lançamentos anuais do Eclipse, que pela amostra parece fechar em maio/junho.
 - **Limitações:** 4 a 5 anos por mês, a base termina em maio de 2011 e a mesma limitação de bugs só resolvidos já registrada vale aqui.
+
+## Layout do dashboard
+
+- **Decisão:** os filtros (período, severidade e componente) e o botão de explorar dados ficam na barra lateral, os gráficos ficam em grade de três colunas com altura fixa e margens reduzidas, e as explicações vão em tooltips ao lado dos títulos.
+- **Motivo:** o objetivo é que filtros, cartões e gráficos caiam numa tela só, sem rolagem. Com os filtros na barra lateral, a área principal fica só com os resultados, e o botão da barra continua no mesmo lugar ao rolar a página.
+- **Eixo de meses:** o intervalo entre as marcas é o menor que não passa de 8 marcas (1, 2, 3, 6 ou 12 meses), com os anos sozinhos quando o período é longo, para os rótulos não se sobreporem nas colunas estreitas.
+- **Estilo:** um ajuste de CSS (em `app/estilo.py`) reduz o espaço em branco no topo. O Streamlit não tem opção nativa para isso, e o nome do elemento alterado muda entre versões, então é um ponto a rever ao atualizar o Streamlit.
