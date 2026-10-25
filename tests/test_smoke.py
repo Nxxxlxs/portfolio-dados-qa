@@ -64,3 +64,10 @@ def test_dashboard_mostra_os_graficos(app_main):
         "Bugs por componente",
         "Evolução do backlog",
     ]
+
+
+def test_subtitulos_do_dashboard_tem_texto_de_ajuda(app_main):
+    at = AppTest.from_file(app_main).run()
+
+    assert not at.exception
+    assert all(subtitulo.help for subtitulo in at.subheader)
