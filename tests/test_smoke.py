@@ -6,7 +6,7 @@ from streamlit.testing.v1 import AppTest
 def test_app_carrega_sem_erros(app_main):
     at = AppTest.from_file(app_main).run()
     assert not at.exception
-    assert "Dashboard de Qualidade de Software" in at.markdown[0].value
+    assert "Dashboard de Qualidade de Software" in at.markdown[1].value
 
 
 def test_dashboard_mostra_os_quatro_cartoes(app_main):
@@ -14,9 +14,9 @@ def test_dashboard_mostra_os_quatro_cartoes(app_main):
 
     assert not at.exception
     assert [m.label for m in at.metric] == [
-        "Bugs analisados",
-        "Mediana (dias)",
-        "Média (dias)",
+        "Total de Bugs",
+        "Mediana de resolução (dias)",
+        "Média de resolução (dias)",
         "Taxa de reabertura",
     ]
     assert at.metric[0].value == "2"
@@ -56,13 +56,13 @@ def test_dashboard_mostra_os_graficos(app_main):
     at = AppTest.from_file(app_main).run()
 
     assert not at.exception
-    assert [s.value for s in at.subheader] == [
+    assert [s.value for s in at.text] == [
         "Bugs criados e resolvidos por mês",
-        "Tempo até a primeira resolução",
-        "Bugs por severidade",
-        "Taxa de reabertura",
         "Bugs por componente",
         "Evolução do backlog",
+        "Bugs por severidade",
+        "Tempo até a primeira resolução",
+        "Taxa de reabertura",
     ]
 
 
